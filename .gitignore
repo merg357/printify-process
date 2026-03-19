@@ -1,0 +1,13 @@
+.env
+uploaded_images.json
+upscale_cache.json
+canva_token.json
+canva_exports.json
+canva_assets.json
+DATA_DELIVERY.json
+raw_designs/
+production/
+designs/
+__pycache__/
+*.pyc
+
