@@ -22,6 +22,7 @@ import time
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
+from functools import lru_cache
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -70,6 +71,9 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
+# ⚡ Bolt Optimization: Cache variant lookups to prevent redundant API calls
+# Impact: Reduces N+1 API calls during bulk product creation to O(1) per blueprint
+@lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
