@@ -1,0 +1,3 @@
+## 2024-05-19 - Cache repeated external API calls in bulk operations
+**Learning:** During bulk merchandise generation (e.g., creating 50 products using the same blueprint), the application made a separate network request to fetch the exact same blueprint variants from the Printify API for every product. This created an N+1 API call bottleneck that severely delayed the creation loop.
+**Action:** Always identify static data being requested repeatedly inside loops (like blueprint variants). Apply `@functools.lru_cache(maxsize=None)` to the fetching functions (e.g., `get_variants`) to memoize the results, saving N-1 network requests per blueprint type and drastically speeding up bulk operations without changing the underlying architecture.
