@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -17,12 +18,16 @@ BASE_URL = "https://api.printify.com/v1"
 AUTH     = {"Authorization": f"Bearer {API_KEY}"}
 HEADERS  = {**AUTH, "Content-Type": "application/json"}
 
+# Memoize blueprints fetch to avoid repeated static API requests.
+@functools.lru_cache(maxsize=None)
 def get_blueprints() -> list:
     url = f"{BASE_URL}/catalog/blueprints.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
     return resp.json()
 
+# Memoize fetching static variants to avoid repeated API requests during loops.
+@functools.lru_cache(maxsize=None)
 def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
