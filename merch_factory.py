@@ -8,6 +8,7 @@ import json
 import time
 import os
 from pathlib import Path
+from functools import lru_cache
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -39,6 +40,8 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
+# ⚡ Bolt Optimization: Memoize blueprint variants to avoid repetitive O(N) network calls during bulk processing
+@lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)

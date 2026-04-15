@@ -1,0 +1,3 @@
+## 2024-04-15 - Memoizing Printify Variant Queries
+**Learning:** The application loops over lists of files or designs during bulk merchandise operations and creates products using standard blueprint sizes. Prior to the optimization, retrieving blueprint variants forced an expensive `requests.get` call to the Printify API on *every* product creation, generating an O(N) network bottleneck for static and repetitively queried variant data.
+**Action:** Always verify if functions generating HTTP requests in bulk loops receive the same arguments repeatedly. In Python, wrapping these queries with `@functools.lru_cache(maxsize=None)` memoizes the results and shifts the network bottleneck to O(1).
