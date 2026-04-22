@@ -1,0 +1,3 @@
+## 2024-05-18 - [Printify API N+1 Bottleneck]
+**Learning:** During bulk processing loops for product creation, identical blueprint variants from third-party APIs (Printify) are repeatedly fetched, leading to a significant N+1 bottleneck and slow execution.
+**Action:** Use Python's `@functools.lru_cache(maxsize=None)` to memoize repetitive, static API calls inside functions like `get_variants` to dramatically reduce network overhead.
