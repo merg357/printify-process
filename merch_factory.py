@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -39,7 +40,9 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
+@functools.lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, provider_id: int) -> list:
+    """Gets variants for a blueprint and caches the result to avoid redundant API calls."""
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
