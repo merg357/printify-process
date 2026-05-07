@@ -1,0 +1,3 @@
+## 2024-05-14 - N+1 Queries in Iterative API Integrations
+**Learning:** Calling a third-party API for static or infrequently changing data (like Printify blueprint variants) inside an iterative product creation loop causes significant network bottlenecking (N+1 query problem). Using `@functools.lru_cache` mitigates this, but when memoizing parsed JSON outputs, returning mutable lists introduces a side-effect pitfall if those lists are modified later.
+**Action:** Always memoize static lookup functions in iterative loops with `lru_cache(maxsize=None)` and ensure the return type is immutable (e.g., cast to `tuple`) to guarantee thread safety and prevent downstream state mutations.
