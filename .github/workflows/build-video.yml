@@ -1,0 +1,58 @@
+name: Build Music Video
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-video:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install yt-dlp
+        run: pip install yt-dlp
+
+      - name: Download YouTube video
+        run: yt-dlp -f best -o 'video.mp4' 'https://www.youtube.com/watch?v=3aDZjMSWls0'
+
+      - name: Extract audio
+        run: yt-dlp -x --audio-format mp3 -o 'audio.mp3' 'https://www.youtube.com/watch?v=3aDZjMSWls0'
+
+      - name: Extract frames
+        run: |
+          ffmpeg -ss 00:00:15 -i video.mp4 -vframes 1 frame1.jpg
+          ffmpeg -ss 00:00:45 -i video.mp4 -vframes 1 frame2.jpg
+          ffmpeg -ss 00:01:15 -i video.mp4 -vframes 1 frame3.jpg
+          ffmpeg -ss 00:01:45 -i video.mp4 -vframes 1 frame4.jpg
+          ffmpeg -ss 00:02:15 -i video.mp4 -vframes 1 frame5.jpg
+
+      - name: Create cinematic slideshow
+        run: |
+          ffmpeg \
+            -loop 1 -t 30 -i frame1.jpg \
+            -loop 1 -t 30 -i frame2.jpg \
+            -loop 1 -t 30 -i frame3.jpg \
+            -loop 1 -t 30 -i frame4.jpg \
+            -loop 1 -t 30 -i frame5.jpg \
+            -i audio.mp3 \
+            -filter_complex "
+              [0:v]scale=1920:1080,format=yuv420p,zoompan=z='min(zoom+0.002,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=900,fps=30[0v];
+              [1:v]scale=1920:1080,format=yuv420p,zoompan=z='min(zoom+0.002,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=900,fps=30[1v];
+              [2:v]scale=1920:1080,format=yuv420p,zoompan=z='min(zoom+0.002,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=900,fps=30[2v];
+              [3:v]scale=1920:1080,format=yuv420p,zoompan=z='min(zoom+0.002,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=900,fps=30[3v];
+              [4:v]scale=1920:1080,format=yuv420p,zoompan=z='min(zoom+0.002,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=900,fps=30[4v];
+              [0v][1v]xfade=transition=fade:duration=1:offset=29[01];
+              [01][2v]xfade=transition=fade:duration=1:offset=59[12];
+              [12][3v]xfade=transition=fade:duration=1:offset=89[23];
+              [23][4v]xfade=transition=fade:duration=1:offset=119[out]" \
+            -map "[out]" -map 5:a \
+            -c:v libx264 -pix_fmt yuv420p -preset medium -c:a aac -shortest \
+            -r 30 'Hey_Iran_Music_Video.mp4'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hey_Iran_Music_Video
+          path: Hey_Iran_Music_Video.mp4
