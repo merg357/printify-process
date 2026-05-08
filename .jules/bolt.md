@@ -1,0 +1,3 @@
+## 2024-05-08 - Memoizing Printify Variant API Queries in Bulk Creation
+**Learning:** Found an N+1 query performance bottleneck where multiple scripts were making repeated, redundant API calls to fetch blueprint variants from Printify within their iterative loops. Utilizing `@functools.lru_cache` provides a significant performance boost by eliminating these redundant network calls.
+**Action:** Always memoize static or infrequently changing third-party API queries (like fetching blueprint variants) using `@functools.lru_cache(maxsize=None)` inside iterative processes, and ensure that the return type is cast to a `tuple` to guarantee thread safety and prevent any unintended state mutation of shared references.
