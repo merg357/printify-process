@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -17,17 +18,23 @@ BASE_URL = "https://api.printify.com/v1"
 AUTH     = {"Authorization": f"Bearer {API_KEY}"}
 HEADERS  = {**AUTH, "Content-Type": "application/json"}
 
-def get_blueprints() -> list:
+# Cache expensive API call results to prevent N+1 network bottlenecks
+# Returning a tuple ensures the cached value is immutable to prevent downstream state mutations.
+@functools.lru_cache(maxsize=None)
+def get_blueprints() -> tuple:
     url = f"{BASE_URL}/catalog/blueprints.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json()
+    return tuple(resp.json())
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# Cache expensive API call results to prevent N+1 network bottlenecks
+# Returning a tuple ensures the cached value is immutable to prevent downstream state mutations.
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"
