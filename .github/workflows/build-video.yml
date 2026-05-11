@@ -13,11 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Upgrade yt-dlp
-        run: pip install -U yt-dlp
+      - name: Install yt-dlp and dependencies
+        run: |
+          pip install -U yt-dlp
+          sudo apt-get update && sudo apt-get install -y nodejs
 
       - name: Download YouTube video
-        run: "yt-dlp -f best --no-check-certificates --user-agent 'Mozilla/5.0' -o 'video.mp4' '${{ inputs.youtube_url }}'"
+        run: "yt-dlp -f best --no-check-certificates --user-agent 'Mozilla/5.0' --extractor-args 'youtube:player_client=android' --js-runtimes nodejs -o 'video.mp4' '${{ inputs.youtube_url }}'"
 
       - name: Upload to transfer.sh and get public URL
         id: upload
