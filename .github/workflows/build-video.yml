@@ -9,7 +9,7 @@ on:
         type: string
 
 jobs:
-  build-video:
+  build-video-job:
     runs-on: ubuntu-latest
     
     steps:
