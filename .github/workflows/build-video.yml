@@ -17,7 +17,7 @@ jobs:
         run: pip install yt-dlp
 
       - name: Download YouTube video
-        run: yt-dlp -f best -o 'video.mp4' '${{ inputs.youtube_url }}'
+        run: "yt-dlp -f best -o 'video.mp4' '${{ inputs.youtube_url }}'"
 
       - name: Upload to transfer.sh and get public URL
         id: upload
@@ -26,4 +26,4 @@ jobs:
           echo "download_url=$URL" >> $GITHUB_OUTPUT
 
       - name: Output download URL
-        run: echo "Download URL: ${{ steps.upload.outputs.download_url }}"
+        run: "echo 'Download URL: ${{ steps.upload.outputs.download_url }}'"
