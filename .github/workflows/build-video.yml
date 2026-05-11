@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Install yt-dlp
-        run: pip install yt-dlp
+      - name: Upgrade yt-dlp
+        run: pip install -U yt-dlp
 
       - name: Download YouTube video
-        run: "yt-dlp -f best -o 'video.mp4' '${{ inputs.youtube_url }}'"
+        run: "yt-dlp -f best --no-check-certificates --user-agent 'Mozilla/5.0' -o 'video.mp4' '${{ inputs.youtube_url }}'"
 
       - name: Upload to transfer.sh and get public URL
         id: upload
