@@ -1,0 +1,3 @@
+## 2024-05-24 - Memoizing Printify Variant Fetches
+**Learning:** Fetching product variants iteratively in bulk loops causes severe N+1 API bottlenecks. Since variant lists for a given blueprint/provider pair are static during execution, not caching them results in redundant network calls.
+**Action:** Always wrap third-party API queries that return static data inside loops with `@functools.lru_cache(maxsize=None)`. Crucially, cast the return value from a mutable structure (like a list) to an immutable one (like a tuple) to guarantee thread safety and prevent downstream state mutations when reusing memoized responses.

@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -19,6 +20,16 @@ if not TOKEN:
     exit(1)
 
 HEADERS = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
+
+@functools.lru_cache(maxsize=None)
+def get_variants(bp_id: int, provider_id: int) -> tuple:
+    # Bolt ⚡: Cache variants fetch to prevent N+1 queries during bulk operations
+    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
+    resp = requests.get(var_url, headers=HEADERS)
+    if resp.status_code != 200:
+        return ()
+    variants = resp.json().get("variants", [])
+    return tuple(v["id"] for v in variants[:3]) if variants else ()
 
 # (blueprint_id, print_provider_id, label)
 BLUEPRINTS = [
@@ -34,16 +45,10 @@ for i in range(25):
     bp_id, provider_id, label = BLUEPRINTS[i % len(BLUEPRINTS)]
 
     # Fetch real variants
-    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
-    resp = requests.get(var_url, headers=HEADERS)
-    if resp.status_code != 200:
-        print(f"[{i+1}] Could not get variants for {label}: {resp.status_code}")
-        continue
-    variants = resp.json().get("variants", [])
-    if not variants:
+    variant_ids = get_variants(bp_id, provider_id)
+    if not variant_ids:
         print(f"[{i+1}] No variants for {label}, skipping")
         continue
-    variant_ids = [v["id"] for v in variants[:3]]
 
     product_data = {
         "title": f"Reliable Chaos Industrial Logo {i+1} — {label}",
