@@ -1,0 +1,3 @@
+## 2025-02-18 - Prevent N+1 API calls with LRU caching
+**Learning:** In integration loops (like creating multiple merchandise products), fetching blueprint variants creates severe N+1 network bottlenecks because the variants for a given blueprint rarely change but are fetched for every product iteration.
+**Action:** Use `@functools.lru_cache(maxsize=None)` on API query functions (like `get_variants`) to memoize responses. Crucially, cast the return type to an immutable structure like a `tuple` (instead of returning mutable lists) to guarantee thread safety and prevent unintended downstream state mutations from shared references across iterations.
