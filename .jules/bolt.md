@@ -1,0 +1,3 @@
+## 2024-06-05 - Avoid N+1 API calls with immutable cached responses
+**Learning:** Adding `@functools.lru_cache` to functions fetching static API data (like print provider variants based on blueprint ID) prevents severe N+1 network bottlenecks during iterative product creation loops. However, when caching, it's critical to return immutable structures (like `tuple` instead of `list`) to avoid downstream code accidentally mutating the cached shared reference, which could cause functional regressions.
+**Action:** Always cast cached collection responses to immutable types (`tuple()`) and document the performance vs immutability tradeoff in codebase comments.
