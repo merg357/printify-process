@@ -32,6 +32,9 @@ AUTH_H   = {"Authorization": f"Bearer {TOKEN}"}
 JSON_H   = {**AUTH_H, "Content-Type": "application/json"}
 UPLOAD_CACHE = os.path.join(os.path.dirname(__file__), "uploaded_images.json")
 
+# Use a session for connection pooling to improve performance
+session = requests.Session()
+
 # Product blueprints: (blueprint_id, print_provider_id, label)
 BLUEPRINTS = [
     (77,   29, "Bella Canvas Tee"),
@@ -72,7 +75,7 @@ def save_upload_cache(data: dict):
 
 def get_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
-    r = requests.get(url, headers=AUTH_H, timeout=15)
+    r = session.get(url, headers=AUTH_H, timeout=15)
     r.raise_for_status()
     return [v["id"] for v in r.json().get("variants", [])[:4]]
 
@@ -80,7 +83,7 @@ def upload_image_file(path: str) -> str:
     """Upload a local PNG file to Printify. Returns image ID."""
     url = f"{BASE_URL}/uploads/images.json"
     with open(path, "rb") as f:
-        r = requests.post(url, headers=AUTH_H,
+        r = session.post(url, headers=AUTH_H,
                           files={"file": (os.path.basename(path), f, "image/png")},
                           timeout=120)
     r.raise_for_status()
@@ -92,7 +95,7 @@ def upload_image_file(path: str) -> str:
 def upload_image_url(url_src: str, filename: str) -> str:
     """Upload an image by URL to Printify (faster for hosted images). Returns image ID."""
     url = f"{BASE_URL}/uploads/images.json"
-    r = requests.post(url, headers=JSON_H,
+    r = session.post(url, headers=JSON_H,
                       json={"file_name": filename, "url": url_src},
                       timeout=60)
     r.raise_for_status()
@@ -136,14 +139,14 @@ def create_product(blueprint_id: int, provider_id: int, label: str,
         }],
         "is_draft": True
     }
-    r = requests.post(f"{BASE_URL}/shops/{SHOP_ID}/products.json",
+    r = session.post(f"{BASE_URL}/shops/{SHOP_ID}/products.json",
                       headers=JSON_H, json=payload, timeout=30)
     if r.status_code not in (200, 201):
         raise ValueError(f"Create failed {r.status_code}: {r.text[:300]}")
     return r.json()
 
 def get_all_products() -> list:
-    r = requests.get(f"{BASE_URL}/shops/{SHOP_ID}/products.json?limit=100",
+    r = session.get(f"{BASE_URL}/shops/{SHOP_ID}/products.json?limit=100",
                      headers=AUTH_H, timeout=15)
     r.raise_for_status()
     return r.json().get("data", [])
@@ -152,7 +155,7 @@ def get_all_products() -> list:
 
 def cmd_check():
     """Verify token and show shop info."""
-    r = requests.get(f"{BASE_URL}/shops.json", headers=AUTH_H, timeout=10)
+    r = session.get(f"{BASE_URL}/shops.json", headers=AUTH_H, timeout=10)
     if r.status_code == 200:
         shops = r.json()
         print("Token valid. Shops:")
@@ -288,7 +291,7 @@ def cmd_sync_github(repo: str, branch: str = "main", folder: str = ""):
     api_base = f"https://api.github.com/repos/{repo}/contents/{folder}"
     params = {"ref": branch}
     print(f"Fetching file list from github.com/{repo} [{branch}]{'/'+folder if folder else ''}...")
-    r = requests.get(api_base, params=params, timeout=15)
+    r = session.get(api_base, params=params, timeout=15)
     if r.status_code == 404:
         print(f"Repo or folder not found: {repo}/{folder}")
         print("Make sure the repo is PUBLIC and the path is correct.")
@@ -355,7 +358,7 @@ def cmd_dump():
 
 def cmd_delete(ids: list):
     for pid in ids:
-        r = requests.delete(f"{BASE_URL}/shops/{SHOP_ID}/products/{pid}.json",
+        r = session.delete(f"{BASE_URL}/shops/{SHOP_ID}/products/{pid}.json",
                             headers=AUTH_H, timeout=15)
         if r.status_code in (200, 204):
             print(f"Deleted: {pid}")
