@@ -1,0 +1,3 @@
+## 2025-02-24 - [N+1 API Call Bottleneck in Bulk Product Creation loops]
+**Learning:** [Calling the Printify API for static blueprint variants within an iteration block significantly impacts bulk product creation speed because the variants do not change between loop iterations. Returning mutable lists from memoized functions can cause unintended state mutations downstream.]
+**Action:** [Always memoize third-party API variant lookups within loop iterations using `@functools.lru_cache` and convert returned parsed JSON list data structures to immutable tuples to prevent shared state modification issues and maintain thread safety.]
