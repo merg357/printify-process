@@ -2,6 +2,7 @@
 """
 Create Merch V2 - Bulk create 25 draft products with dynamic variant fetch.
 """
+import functools
 import requests
 import json
 import time
@@ -28,22 +29,34 @@ BLUEPRINTS = [
     (11,   29, "Hoodie"),
 ]
 
+# PERFORMANCE OPTIMIZATION: Memoize static API requests to Printify for variant data.
+# 🎯 Why: Solves N+1 network bottlenecks when fetching variants repeatedly within iterative product creation loops.
+# 📊 Impact: Significantly reduces overall execution time by converting redundant HTTP calls to fast local memory lookups.
+# 🔒 Safety: Returns immutable tuples instead of lists to guarantee thread safety and prevent downstream state mutations in shared references.
+@functools.lru_cache(maxsize=None)
+def get_variants(bp_id, provider_id):
+    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
+    resp = requests.get(var_url, headers=HEADERS)
+    if resp.status_code != 200:
+        return None
+    variants = resp.json().get("variants", [])
+    if not variants:
+        return tuple()
+    return tuple(v["id"] for v in variants[:3])
+
 created_products = []
 
 for i in range(25):
     bp_id, provider_id, label = BLUEPRINTS[i % len(BLUEPRINTS)]
 
     # Fetch real variants
-    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
-    resp = requests.get(var_url, headers=HEADERS)
-    if resp.status_code != 200:
-        print(f"[{i+1}] Could not get variants for {label}: {resp.status_code}")
+    variant_ids = get_variants(bp_id, provider_id)
+    if variant_ids is None:
+        print(f"[{i+1}] Could not get variants for {label}")
         continue
-    variants = resp.json().get("variants", [])
-    if not variants:
+    if not variant_ids:
         print(f"[{i+1}] No variants for {label}, skipping")
         continue
-    variant_ids = [v["id"] for v in variants[:3]]
 
     product_data = {
         "title": f"Reliable Chaos Industrial Logo {i+1} — {label}",
