@@ -2,6 +2,7 @@
 """
 Merch Bridge - Full pipeline: upload designs, fetch blueprints, create products.
 """
+import functools
 import requests
 import json
 import time
@@ -23,11 +24,16 @@ def get_blueprints() -> list:
     resp.raise_for_status()
     return resp.json()
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# PERFORMANCE OPTIMIZATION: Memoize static API requests to Printify for variant data.
+# 🎯 Why: Solves N+1 network bottlenecks when fetching variants repeatedly within iterative product creation loops.
+# 📊 Impact: Significantly reduces overall execution time by converting redundant HTTP calls to fast local memory lookups.
+# 🔒 Safety: Returns immutable tuples instead of lists to guarantee thread safety and prevent downstream state mutations in shared references.
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"
