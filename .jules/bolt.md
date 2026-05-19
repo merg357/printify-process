@@ -1,0 +1,3 @@
+## 2025-05-19 - Caching Third-Party API Queries
+**Learning:** In iterative product creation loops, querying the same third-party API endpoint (e.g., getting blueprint variants from Printify) repeatedly causes an N+1 network bottleneck. Memory explicitly recommends memoizing these using Python's `@functools.lru_cache`. Additionally, the cached structures must be immutable (like a tuple instead of a list) to prevent accidental mutation of the cache by downstream consumers.
+**Action:** When working on batch/bulk creation scripts that make repetitive API calls for the same entity (e.g. blueprint variants), memoize the network requests using `@functools.lru_cache(maxsize=None)` and ensure the returned data is immutable (e.g., wrap lists in `tuple()`).
