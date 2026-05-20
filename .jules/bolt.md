@@ -1,0 +1,3 @@
+## 2023-10-27 - N+1 API Bottlenecks in Bulk Processing Scripts
+**Learning:** Found an N+1 API bottleneck in the Python automation scripts where `get_variants` repeatedly made identical network requests for the same blueprint and provider IDs during bulk product creation loops. This significantly slows down the execution of scripts like `printify_manager.py` and `create_merch.py`.
+**Action:** Used Python's built-in `@functools.lru_cache(maxsize=None)` to memoize repetitive/static third-party API queries. Ensure all future data fetching loops cache static inputs to avoid redundant network calls.
