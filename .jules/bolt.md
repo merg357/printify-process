@@ -1,0 +1,3 @@
+## 2024-05-21 - Caching Printify Variant Fetches
+**Learning:** In bulk merchandise creation scripts (like `printify_manager.py`, `create_merch.py`, and `merch_factory.py`), the `get_variants` function is called repeatedly for the same `blueprint_id` and `provider_id` inside loops. This causes a massive N+1 network bottleneck because the variant list for a blueprint/provider combination is static during a script's execution.
+**Action:** Always use `@functools.lru_cache(maxsize=None)` to memoize static third-party API queries like `get_variants` in bulk creation scripts. Ensure the return type is an immutable tuple to prevent downstream state mutations from shared references while remaining JSON serializable.
