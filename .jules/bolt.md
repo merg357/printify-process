@@ -1,0 +1,3 @@
+## 2026-05-01 - Memoize Printify Blueprint Variant API Queries
+**Learning:** In multiple scripts (`create_merch.py`, `create_merch_v2.py`, `printify_manager.py`, `merch_factory.py`, `merg_bridge.py`), the Printify API is queried repeatedly for product blueprint variants (`variants.json`) within iterative loops creating draft products. This causes an N+1 network bottleneck because the script redundantly requests the static variants for the same blueprints.
+**Action:** Always use Python's `@functools.lru_cache(maxsize=None)` to memoize static or infrequently changing third-party API queries (e.g., fetching blueprint variants from Printify) within iterative product creation loops to prevent N+1 network bottlenecks.

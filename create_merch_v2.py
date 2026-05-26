@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -28,20 +29,24 @@ BLUEPRINTS = [
     (11,   29, "Hoodie"),
 ]
 
+# Performance optimization: Memoize static third-party API queries to prevent N+1 network bottlenecks
+@functools.lru_cache(maxsize=None)
+def get_variants(bp_id: int, provider_id: int) -> list:
+    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
+    resp = requests.get(var_url, headers=HEADERS)
+    if resp.status_code != 200:
+        return []
+    return resp.json().get("variants", [])
+
 created_products = []
 
 for i in range(25):
     bp_id, provider_id, label = BLUEPRINTS[i % len(BLUEPRINTS)]
 
     # Fetch real variants
-    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
-    resp = requests.get(var_url, headers=HEADERS)
-    if resp.status_code != 200:
-        print(f"[{i+1}] Could not get variants for {label}: {resp.status_code}")
-        continue
-    variants = resp.json().get("variants", [])
+    variants = get_variants(bp_id, provider_id)
     if not variants:
-        print(f"[{i+1}] No variants for {label}, skipping")
+        print(f"[{i+1}] Could not get variants for {label} or no variants available, skipping")
         continue
     variant_ids = [v["id"] for v in variants[:3]]
 
