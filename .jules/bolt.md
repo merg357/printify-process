@@ -1,0 +1,3 @@
+## 2024-06-11 - Memoizing third-party API queries that return mutable objects
+**Learning:** When using `@functools.lru_cache` to memoize responses, be cautious of returning mutable objects (like parsed JSON lists). Using it to cache API fetches of blueprint variants prevented N+1 network bottlenecks but returning a mutable structure like a `list` runs the risk of unintended downstream state mutations from shared references across iterations.
+**Action:** Always cast the return type of memoized operations to an immutable structure (e.g., `tuple`) to guarantee thread safety and prevent downstream changes from affecting the cached API objects.
