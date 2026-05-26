@@ -1,0 +1,3 @@
+## 2024-03-24 - Memoizing Static Third-Party API Queries
+**Learning:** In loops processing bulk items (like generating many Printify products), repetitive queries for static data (such as product blueprint variants) can cause significant network bottlenecks.
+**Action:** Use Python's `@functools.lru_cache(maxsize=None)` on functions that fetch this static data. This caches the API responses in memory, replacing slow network calls with instant dictionary lookups.
