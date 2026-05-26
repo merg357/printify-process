@@ -1,0 +1,3 @@
+## 2024-05-24 - Eliminating N+1 variants API calls with lru_cache
+**Learning:** During bulk merchandise creation in printify_manager.py, the script loops over uploaded designs and within that loops over blueprints, querying for variants (`get_variants`) every single time. This is an N+1 performance anti-pattern since blueprint and provider mapping to variants does not change during the script execution.
+**Action:** Always wrap lookup functions for constant reference data inside tight loops with `@functools.lru_cache` to eliminate redundant network overhead and significantly speed up execution when querying Printify or similar REST APIs.
