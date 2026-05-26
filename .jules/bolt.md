@@ -1,0 +1,3 @@
+## 2024-05-11 - Optimize get_variants by caching with functools.lru_cache
+**Learning:** `get_variants` fetches variant IDs from Printify for a given blueprint and provider. This network call is made repeatedly in loops during product creation (e.g., in `create_merch.py` iterating over 20+ blueprints, where blueprint IDs like 1048 or 650 are duplicated). Caching this static third-party data prevents N+1 network requests and speeds up the script execution significantly.
+**Action:** Use `@functools.lru_cache(maxsize=None)` on `get_variants`. Convert the return type from a mutable list to an immutable tuple to guarantee thread safety and prevent downstream state mutation, as required by the memory instructions. Keep exact list slicing like `[:4]` or `[:3]` intact.
