@@ -1,0 +1,3 @@
+## 2026-05-10 - Memoizing Printify API Variant Fetches
+**Learning:** In product creation loops, fetching blueprint variants from the Printify API repeatedly causes a severe N+1 network request bottleneck. When using `@functools.lru_cache` to optimize this, returning mutable objects like lists allows downstream code to unintentionally mutate the shared cached state, causing bugs.
+**Action:** Always use `@functools.lru_cache(maxsize=None)` to memoize static or infrequently changing third-party API queries in iterative loops, but ensure the return value is cast to an immutable structure like a `tuple` to guarantee thread safety and prevent shared reference mutations.
