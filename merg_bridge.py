@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,11 +24,16 @@ def get_blueprints() -> list:
     resp.raise_for_status()
     return resp.json()
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# What: Cache print provider variant lookups and return as immutable tuple
+# Why: Prevents N+1 API calls for the same blueprint/provider combination when creating multiple products
+# Impact: Eliminates redundant network requests, significantly speeding up bulk product creation
+# Safety: Caches static/infrequently changing third-party data safely by using immutable tuples
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"
