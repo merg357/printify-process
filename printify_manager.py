@@ -19,6 +19,7 @@ import sys
 import os
 import json
 import time
+import functools
 import requests
 from pathlib import Path
 from dotenv import load_dotenv
@@ -70,6 +71,8 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
+# Cache expensive static API queries to avoid network bottlenecks during bulk loops.
+@functools.lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
