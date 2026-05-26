@@ -9,6 +9,7 @@ import time
 import os
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+from functools import lru_cache
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -53,6 +54,9 @@ def get_product_blueprints() -> List[Dict[str, Any]]:
         {"product_name": "Tote Bag", "blueprint_id": 1234, "variant_id": None, "color": "Navy",    "placement": {"position": "front", "size": 1.5}},
     ]
 
+# ⚡ Bolt Optimization: Cache variant lookups to prevent redundant API calls
+# Impact: Reduces N+1 API calls during bulk product creation to O(1) per blueprint
+@lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, print_provider_id: int = 29) -> List[int]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{print_provider_id}/variants.json"
     resp = requests.get(url, headers=get_headers())

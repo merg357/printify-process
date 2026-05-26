@@ -1,0 +1,3 @@
+## 2024-04-08 - Cache API Lookups in Bulk Merch Operations
+**Learning:** During bulk operations across scripts like `printify_manager.py`, `create_merch.py`, and `merch_factory.py`, the `get_variants` function is called repeatedly for the same `blueprint_id` and `provider_id`. This creates a severe N+1 problem resulting in redundant HTTP API requests that slow down script execution and could lead to rate limits.
+**Action:** Always memoize static API configurations or lookups. Specifically, applied Python's built-in `functools.lru_cache` to `get_variants` functions, reducing N+1 external API calls per blueprint down to O(1).

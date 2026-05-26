@@ -9,6 +9,7 @@ import time
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from functools import lru_cache
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -39,6 +40,9 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
+# ⚡ Bolt Optimization: Cache variant lookups to prevent redundant API calls
+# Impact: Reduces N+1 API calls during bulk product creation to O(1) per blueprint
+@lru_cache(maxsize=None)
 def get_variants(blueprint_id: int, provider_id: int) -> list:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
