@@ -1,0 +1,3 @@
+## 2024-10-24 - N+1 Network Bottleneck in Printify API Loops
+**Learning:** Looping through product blueprints and sequentially fetching variants from third-party APIs causes a massive N+1 network bottleneck. Using `@functools.lru_cache` mitigates this but returning mutable lists poses thread-safety and downstream state mutation risks. Python's `json.dumps()` natively serializes tuples into JSON arrays, allowing tuples to be safely used as drop-in, immutable replacements for lists.
+**Action:** Always cast memoized sequence returns to `tuple` and update type hints to `tuple` or `Tuple[...]` when using `lru_cache` to memoize API payloads to ensure thread safety and prevent regressions.
