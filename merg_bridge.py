@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,11 +24,15 @@ def get_blueprints() -> list:
     resp.raise_for_status()
     return resp.json()
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# Why: Blueprint variants are static and queried repeatedly within loops creating multiple products with the same blueprint_id (N+1 bottleneck)
+# Impact: Reduces duplicate network calls, avoiding redundant requests per variant lookup
+# Safety: LRU cache is safe here as blueprint variants rarely change during script execution. Return cast to tuple ensures immutability and thread safety.
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"
