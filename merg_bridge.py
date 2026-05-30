@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,11 +24,15 @@ def get_blueprints() -> list:
     resp.raise_for_status()
     return resp.json()
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# Why: Prevents repeated N+1 network requests for blueprint variants in the loop.
+# Impact: Eliminates redundant API calls, significantly speeding up bulk processing.
+# Safety: We return an immutable tuple to prevent shared reference mutations.
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"
