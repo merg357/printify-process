@@ -1,0 +1,3 @@
+## 2024-05-24 - Printify API N+1 Bottleneck
+**Learning:** During bulk merchandise creation across multiple scripts (`printify_manager.py`, `merch_factory.py`, `create_merch.py`), querying the Printify API for blueprint variants creates a significant N+1 network bottleneck because variants are static per blueprint but get requested for every single item.
+**Action:** Use Python's `@functools.lru_cache(maxsize=None)` to memoize variant queries. Crucially, modify the return type from a `list` to an immutable `tuple` to ensure thread safety and prevent downstream mutations, avoiding the caching of mutable state. Python's `json.dumps()` securely and natively serializes tuples into JSON arrays, meaning no other changes are required for the payload payload.
