@@ -1,0 +1,3 @@
+## 2024-06-08 - Cache API variants locally
+**Learning:** Repetitive, stateless external API calls like fetching printify blueprint variants (e.g. `get_variants`) are an N+1 network bottleneck in product creation scripts. Using `@functools.lru_cache(maxsize=None)` caches the responses, significantly reducing the amount of network requests. However, because `@functools.lru_cache` returns the same reference, list outputs must be cast to `tuple` to ensure thread safety and immutability.
+**Action:** Always memoize statically fetched variants or products within iterative scripts using `@functools.lru_cache(maxsize=None)` and change the return types/type-hints to `tuple`.
