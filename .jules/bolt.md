@@ -1,0 +1,3 @@
+## 2024-05-24 - N+1 Network Bottlenecks and Safe Memoization
+**Learning:** In bulk merchandise generation, querying static third-party API configurations (like Printify variants) inside loops causes severe N+1 network bottlenecks. Using Python's `@functools.lru_cache` solves this, but returning mutable JSON lists creates subtle thread-safety issues if downstream code mutates the shared reference.
+**Action:** Always cast memoized JSON list responses to immutable structures (e.g., tuples). `json.dumps()` natively serializes Python tuples into JSON arrays, making them safe, drop-in replacements for API payloads while guaranteeing cache integrity.

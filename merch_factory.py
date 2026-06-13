@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -39,14 +40,18 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# Why: Caching static print provider variant lookups prevents N+1 network requests during product iteration.
+# Impact: Eliminates redundant API calls, vastly improving bulk product generation speed.
+# Safety: Returns an immutable tuple to prevent shared-reference mutations; natively JSON-serializable.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple[int, ...]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple(v["id"] for v in resp.json().get("variants", [])[:4])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
-                   variant_ids: list, image_id: str) -> dict:
+                   variant_ids: tuple[int, ...], image_id: str) -> dict:
     url = f"{BASE_URL}/shops/{SHOP_ID}/products.json"
     payload = {
         "title": title,
