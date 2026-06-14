@@ -1,0 +1,3 @@
+## 2026-06-14 - Memoize Printify Variant Queries
+**Learning:** Static third-party API configurations (like blueprint variants from Printify) fetched repeatedly within an iterative product creation loop cause a severe N+1 network bottleneck. Since these variants do not change during a run, querying them repeatedly is redundant and slow. In Python, memoizing this with `@functools.lru_cache` and returning immutable objects like `tuple` prevents unintended downstream state mutations from shared references.
+**Action:** Always use `@functools.lru_cache(maxsize=None)` with immutable return types (e.g. `tuple`) to memoize static or infrequently changing third-party API queries within iterative loops.
