@@ -1,0 +1,3 @@
+## 2024-05-18 - Memoizing Printify API Variant Fetches
+**Learning:** Printify API product creation loops often require fetching the same blueprint variant IDs repeatedly (e.g., Gildan 18500 over and over for different designs), causing severe N+1 latency bottlenecks.
+**Action:** Always memoize these static/infrequently changing third-party API variant queries using @functools.lru_cache(maxsize=None). Crucially, change the return type from a mutable list to an immutable tuple to guarantee thread safety and prevent downstream state mutations from shared cache references. json.dumps() natively serializes tuples into JSON arrays, making them perfect drop-in replacements for payload generation.
