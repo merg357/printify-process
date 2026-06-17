@@ -3,6 +3,7 @@
 Merch Factory - Creates products from local ./designs/*.png files.
 Uploads each image to Printify then creates hoodie/tee/mug drafts.
 """
+import functools
 import requests
 import json
 import time
@@ -39,11 +40,15 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# Why: Prevent N+1 API calls when fetching Printify blueprint variants.
+# Impact: Eliminates redundant HTTP requests during bulk product creation.
+# Safety: Return cast to immutable tuple to prevent shared reference mutations.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple[int, ...]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in resp.json().get("variants", [])[:4]])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
                    variant_ids: list, image_id: str) -> dict:
