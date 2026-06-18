@@ -20,6 +20,7 @@ import os
 import json
 import time
 import requests
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -70,11 +71,16 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Cache Printify blueprint variants
+# 🎯 Why: Prevents N+1 API calls for identical blueprint/provider combinations during bulk product creation.
+# 📊 Impact: Significantly reduces network requests and API limits hit per run.
+# 🛡️ Safety: Safe because blueprint variants rarely change, and the returned tuple ensures immutability.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple[int, ...]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
     r.raise_for_status()
-    return [v["id"] for v in r.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in r.json().get("variants", [])[:4]])
 
 def upload_image_file(path: str) -> str:
     """Upload a local PNG file to Printify. Returns image ID."""
