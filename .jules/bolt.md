@@ -1,0 +1,3 @@
+## 2026-06-19 - Memoizing third-party API variant lookups
+**Learning:** In the product generation loop, `get_variants` makes a network call to Printify for every product created, leading to an N+1 API request bottleneck because blueprints and providers are reused across multiple designs. Returning an immutable `tuple` instead of `list` ensures safe memoization since cached mutable lists could be unintentionally altered downstream.
+**Action:** Use `@functools.lru_cache(maxsize=None)` for static blueprint API requests and ensure the return type is cast to a `tuple` to maintain immutability and thread safety.
