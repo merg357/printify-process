@@ -1,0 +1,3 @@
+## 2025-02-23 - Prevent N+1 Printify API Requests via Tuple LRU Caching
+**Learning:** In bulk merchandise creation scripts, fetching variants for identical blueprints inside iterative loops creates a severe N+1 network bottleneck. Because `functools.lru_cache` does not copy return values, caching mutable lists can lead to unintended downstream state mutations.
+**Action:** Use `@functools.lru_cache(maxsize=None)` for repetitive third-party API reads and explicitly cast the return type to an immutable structure (e.g., `tuple(...)`) with corresponding type hints (`-> tuple[int, ...]`) to guarantee thread safety.
