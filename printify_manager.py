@@ -20,6 +20,7 @@ import os
 import json
 import time
 import requests
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -70,11 +71,16 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Added lru_cache to get_variants and return an immutable tuple instead of a list.
+# 🎯 Why: Prevents N+1 redundant network calls to Printify API when iterating over identical blueprint/provider combinations during bulk product creation.
+# 📊 Impact: Significantly speeds up processing by avoiding duplicate API requests, with safe reuse due to immutability.
+# 🔬 Measurement: Observe faster completion time and fewer network requests during 'create' command execution.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple[int, ...]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
     r.raise_for_status()
-    return [v["id"] for v in r.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in r.json().get("variants", [])[:4]])
 
 def upload_image_file(path: str) -> str:
     """Upload a local PNG file to Printify. Returns image ID."""
