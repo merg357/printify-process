@@ -1,0 +1,3 @@
+## 2026-06-26 - API Fetch Memoization in Bulk Operations
+**Learning:** When fetching third-party API configurations (like Printify blueprint variants) inside a bulk creation loop, failing to memoize causes severe N+1 network bottlenecks. Returning mutable lists from `lru_cache` can cause downstream state mutations; casting to an immutable tuple fixes this and is perfectly compatible with `json.dumps`.
+**Action:** Always use `@functools.lru_cache(maxsize=None)` and convert return types to `tuple` for static API query functions used in iterative loops.
