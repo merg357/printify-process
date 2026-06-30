@@ -1,0 +1,3 @@
+## 2026-06-30 - Memoization of third-party API responses requires immutable returns
+**Learning:** Using `@functools.lru_cache` to memoize third-party API calls in iterative loops prevents N+1 network requests, but returning mutable objects like parsed JSON lists can lead to unintended state mutations downstream due to shared references.
+**Action:** Always cast the return type of memoized functions returning lists to immutable types like `tuple` to ensure thread safety, and use `json.dumps()` natively to serialize them into JSON arrays for API payloads.
