@@ -1,0 +1,3 @@
+## 2026-07-03 - Memoizing Static Metadata in Iterative Bulk Operations
+**Learning:** Fetching static blueprint variants from Printify per-product inside bulk creation loops causes an N+1 architectural bottleneck. Modifying caching logic to return mutable JSON lists can cause bugs, but tuples safely bridge API outputs to cached results because JSON naturally serializes tuples as arrays.
+**Action:** When working with third-party APIs in bulk processing scripts, always identify and memoize static metadata endpoints using `@functools.lru_cache(maxsize=None)` and ensure the cached returns are strictly cast to immutable objects like `tuple` to maintain thread safety.
