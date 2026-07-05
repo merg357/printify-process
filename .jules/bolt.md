@@ -1,0 +1,3 @@
+## 2026-07-05 - Cache Third-Party API Data in Iterative Loops
+**Learning:** Third-party API queries for static data (like blueprint variants) within bulk product creation loops cause severe N+1 network bottlenecks. However, caching the responses natively as mutable structures (e.g., JSON lists) can lead to unintended downstream state mutations due to shared references.
+**Action:** Always memoize these lookups using Python's @functools.lru_cache(maxsize=None) and explicitly cast the return type to an immutable structure (like tuple) before caching to guarantee thread safety and prevent regressions.
