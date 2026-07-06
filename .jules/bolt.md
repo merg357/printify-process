@@ -1,0 +1,3 @@
+## 2026-07-06 - Eliminating N+1 API Calls with lru_cache and Tuples
+**Learning:** Returning cached lists from @functools.lru_cache in iterative loops can lead to unintended downstream state mutations if the cached lists are modified. Python's json.dumps() natively serializes tuples into JSON arrays, allowing immutable tuples to safely replace lists in API payloads while enabling thread-safe memoization of static third-party API data (like Printify blueprints).
+**Action:** Always cast the return value to an immutable tuple when using @functools.lru_cache for memoizing API responses used in JSON payloads, and explicitly update type hints to -> tuple.
