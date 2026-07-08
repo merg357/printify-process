@@ -4,6 +4,7 @@ Printify Product Bulk Creator
 Creates draft products for a Printify shop using hardcoded blueprints.
 """
 import requests
+import functools
 import json
 import time
 import os
@@ -53,13 +54,18 @@ def get_product_blueprints() -> List[Dict[str, Any]]:
         {"product_name": "Tote Bag", "blueprint_id": 1234, "variant_id": None, "color": "Navy",    "placement": {"position": "front", "size": 1.5}},
     ]
 
-def get_variants(blueprint_id: int, print_provider_id: int = 29) -> List[int]:
+# 💡 What: Cache API response for static print provider variants
+# 🎯 Why: Avoids N+1 redundant network calls per product blueprint loop
+# 📊 Impact: Significantly speeds up batch product creation script
+# 🔬 Safety: Returning an immutable tuple prevents downstream mutation of the cached data
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, print_provider_id: int = 29) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{print_provider_id}/variants.json"
     resp = requests.get(url, headers=get_headers())
     resp.raise_for_status()
     data = resp.json()
     variants = data.get("variants", [])
-    return [v["id"] for v in variants[:3]] if variants else []
+    return tuple([v["id"] for v in variants[:3]] if variants else [])
 
 def create_product(blueprint_id: int, variant_ids: List[int], product_name: str,
                    color: str, placement: Dict[str, Any]) -> Dict[str, Any]:
