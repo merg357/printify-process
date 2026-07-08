@@ -1,0 +1,3 @@
+## 2026-07-08 - Caching API Results in Iterative Loops
+**Learning:** Using `@functools.lru_cache` is highly effective for eliminating N+1 API bottlenecks on static data (like blueprint variants) within bulk product generation loops. However, returning lists from cached functions is unsafe as they can be mutated downstream, corrupting the cache.
+**Action:** Always cast the return value to an immutable `tuple` (and update the return type hint to `-> tuple`) when memoizing functions that build array-like structures to guarantee thread safety and prevent side effects.
