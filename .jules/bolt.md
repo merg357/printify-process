@@ -1,0 +1,3 @@
+## 2026-07-10 - Cache Third-Party API Queries in Iterative Loops
+**Learning:** When iterative loops (like bulk product creation) repeatedly request the same static configurations (like product blueprint variants) from third-party APIs, it results in N+1 network bottlenecks. Using `@functools.lru_cache` with immutable tuples safely prevents these duplicate requests without altering logic.
+**Action:** Always memoize static or infrequently changing third-party API queries using `@functools.lru_cache(maxsize=None)` returning immutable tuples (like `tuple`) when they are called within iterative loops to prevent N+1 network bottlenecks and guarantee thread safety.
