@@ -1,0 +1,3 @@
+## 2026-07-11 - Caching Printify API Blueprint Variants
+**Learning:** In iterative product creation loops (e.g. creating variants for multiple designs), requesting static blueprint variants causes an N+1 network bottleneck. By using `@functools.lru_cache(maxsize=None)` and returning an immutable type (`tuple` instead of `list`), we can safely prevent redundant API calls without thread safety issues or downstream mutations, as `json.dumps()` natively serializes tuples into JSON arrays.
+**Action:** Always memoize static third-party API queries inside repetitive loops (e.g. `get_variants`), returning a `tuple` to ensure safety across shared references.
