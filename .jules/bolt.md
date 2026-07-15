@@ -1,0 +1,3 @@
+## 2026-07-15 - Printify API Variant Caching
+**Learning:** In bulk product creation scripts, repeatedly querying Printify's variant API for the same blueprint_id (e.g. multiple colors of the same shirt) causes an N+1 network bottleneck. Using `@functools.lru_cache` on the variant fetcher dramatically reduces API calls, but requires converting the returned list to a tuple to prevent shared reference mutations.
+**Action:** Always memoize static 3rd-party API lookups in iterative loops using `@functools.lru_cache(maxsize=None)` and ensure the return type is an immutable `tuple` (with updated type hints) to guarantee thread safety.
