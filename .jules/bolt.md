@@ -1,0 +1,3 @@
+## 2026-07-26 - Prevent N+1 API calls by caching Printify blueprint variants
+**Learning:** In bulk merchandise creation loops (e.g., applying multiple designs to the same Printify blueprint), fetching blueprint variants inside the loop creates a severe N+1 network bottleneck. Because blueprint variants for a specific provider are effectively static during a script's execution, this data is an ideal candidate for memoization.
+**Action:** Use Python's `@functools.lru_cache(maxsize=None)` on `get_variants` (or similar API calls for static third-party data), but ensure the return type is cast to an immutable structure (like `tuple`) to guarantee thread safety and prevent downstream state mutations from shared references across iterations.
