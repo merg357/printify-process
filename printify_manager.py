@@ -17,6 +17,7 @@ Usage:
 """
 import sys
 import os
+import functools
 import json
 import time
 import requests
@@ -70,11 +71,16 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Caching print provider variants to prevent N+1 API calls during bulk product creation.
+# 🎯 Why: The same variants are repeatedly requested for each new product with the same blueprint/provider, slowing down the loop.
+# 📊 Impact: Eliminates redundant network requests, speeding up bulk product creation significantly.
+# 🛡️ Safety: Uses tuple to return an immutable structure, preventing accidental state mutation of cached objects.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
     r.raise_for_status()
-    return [v["id"] for v in r.json().get("variants", [])[:4]]
+    return tuple(v["id"] for v in r.json().get("variants", [])[:4])
 
 def upload_image_file(path: str) -> str:
     """Upload a local PNG file to Printify. Returns image ID."""
