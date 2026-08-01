@@ -1,0 +1,3 @@
+## 2026-08-01 - N+1 Network Bottleneck in Printify Blueprint Variants
+**Learning:** The product creation loop in printify_manager.py iteratively calls get_variants for the same blueprint and provider IDs, resulting in an N+1 API bottleneck. Because the variants API response doesn't change during the execution, it should be cached, but returning a mutable parsed JSON list from an LRU cache can cause shared state mutation bugs downstream.
+**Action:** Use Python's @functools.lru_cache(maxsize=None) for infrequently changing third-party API calls in loops. Convert mutable return types (like lists) to immutable tuples before returning to guarantee thread safety when memoizing.
