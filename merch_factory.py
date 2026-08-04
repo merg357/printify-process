@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -39,11 +40,16 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Memoize print provider variants using lru_cache and return an immutable tuple.
+# 🎯 Why: Prevent N+1 API query bottlenecks during bulk creation by caching static blueprint variant data.
+# 📊 Impact: Eliminates redundant network requests for identical blueprint/provider combinations.
+# 🛡️ Safety: Returning a tuple ensures the cached data is immutable and safe from downstream modification.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in resp.json().get("variants", [])[:4]])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
                    variant_ids: list, image_id: str) -> dict:
