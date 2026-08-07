@@ -1,0 +1,3 @@
+## 2026-08-07 - Memoizing API configurations to avoid N+1 requests
+**Learning:** In bulk operation scripts calling a third-party API (like Printify), repeating static configuration lookups (like fetching blueprint variants) inside inner loops creates a severe N+1 network bottleneck. Since these API responses are functionally static across the execution context, they are prime targets for caching.
+**Action:** Use Python's built-in `@functools.lru_cache(maxsize=None)` to memoize these lookup functions. Always ensure that the cached return type is cast to an immutable structure (e.g., `tuple` instead of `list`) to prevent unsafe downstream state mutations, as Python handles tuples cleanly with methods like `json.dumps()`.
