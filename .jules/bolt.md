@@ -1,0 +1,3 @@
+## 2026-08-08 - Safe Memoization of API Responses
+**Learning:** Using `@functools.lru_cache` to memoize third-party API queries returning parsed JSON lists can lead to downstream state mutations. Furthermore, `json.dumps()` natively serializes tuples into JSON arrays, allowing tuples to be safely used as drop-in replacements for lists in API payloads when ensuring immutability for cached data.
+**Action:** Cast the return type to an immutable structure (e.g., `tuple`) to guarantee thread safety and prevent unintended downstream state mutations from shared references. Update all corresponding Python type hints in the function signature (e.g., `-> tuple`).
