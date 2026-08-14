@@ -9,6 +9,7 @@ import time
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import functools
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
@@ -39,14 +40,19 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Memoize the get_variants API call.
+# 🎯 Why: Blueprint variants are static during a run, avoiding N+1 redundant network calls per product.
+# 📊 Impact: Significantly reduces product creation latency when iterating over many images.
+# 🛡️ Safety: Return casted to an immutable tuple to guarantee thread safety and avoid state mutations.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in resp.json().get("variants", [])[:4]])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
-                   variant_ids: list, image_id: str) -> dict:
+                   variant_ids: tuple, image_id: str) -> dict:
     url = f"{BASE_URL}/shops/{SHOP_ID}/products.json"
     payload = {
         "title": title,
