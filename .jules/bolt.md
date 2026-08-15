@@ -1,0 +1,3 @@
+## 2026-08-15 - Printify Variant API N+1 Bottleneck
+**Learning:** The product creation loop in printify_manager.py makes redundant network calls to fetch variants for the same blueprints. Since blueprints are static within a run, this creates an N+1 bottleneck. Additionally, because the results are used directly in JSON payloads, returning immutable tuples instead of lists prevents caching mutable state while remaining compatible with json.dumps().
+**Action:** Use @functools.lru_cache with immutable tuple returns for static third-party API lookups (like Printify variants) inside iterative product creation pipelines.
