@@ -1,0 +1,3 @@
+## 2026-08-16 - Cache Optimization with Immutable Types
+**Learning:** Returning list comprehensions directly in cached API requests without memoization causes redundant network bottlenecks. Caching is effective, but requires converting lists to immutable types like `tuple` to prevent side effects in a multi-threaded or iterative pipeline where the cached reference may be accidentally modified. `json.dumps()` securely supports standard Python tuples, making them a safe drop-in replacement.
+**Action:** Always wrap cached response objects (like parsed variant lists) in `tuple()` before returning from a function marked with `@functools.lru_cache`, and update the downstream type signatures accordingly.
