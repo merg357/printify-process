@@ -1,0 +1,3 @@
+## 2026-08-18 - Memoizing API queries in product creation loops
+**Learning:** The application queries Printify for product variants inside iterative loops (e.g., uploading many designs). The variants for a given `blueprint_id` and `print_provider_id` are static and do not change between iterations, causing a severe N+1 network bottleneck.
+**Action:** Apply `@functools.lru_cache(maxsize=None)` to functions like `get_variants` to memoize the API responses. Important: When caching responses that are normally parsed as JSON lists, always cast the return type to an immutable structure (like `tuple`) to ensure thread-safety and avoid downstream state mutations, updating the type hints accordingly.
