@@ -1,0 +1,3 @@
+## 2024-08-20 - Memoizing Printify API queries
+**Learning:** Found an N+1 API bottleneck in `printify_manager.py`, `merch_factory.py`, and `create_merch.py`. The `get_variants` function is called repeatedly in a loop for each image/product being created, fetching identical blueprint variant lists from Printify.
+**Action:** Always memoize static third-party API queries (e.g. `get_variants`) using `@functools.lru_cache(maxsize=None)` in bulk-creation scripts to avoid redundant network calls. Convert list comprehensions to tuples to ensure thread safety and avoid downstream state mutations, updating type hints appropriately.
