@@ -1,0 +1,3 @@
+## 2026-08-21 - Memoization of third-party API queries in iterative loops
+**Learning:** Found an N+1 network bottleneck where the same Printify blueprint variants were fetched repeatedly during bulk product creation loops. Caching the API response natively solves this, but caution is needed: `json.loads` returns mutable lists, which can cause shared state bugs if mutated downstream.
+**Action:** Always use `@functools.lru_cache(maxsize=None)` for static third-party API queries inside iterative loops, and explicitly cast the returned parsed JSON lists to immutable `tuple` types to ensure thread-safety and prevent unintended mutations.
