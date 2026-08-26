@@ -1,0 +1,3 @@
+## 2026-08-26 - Immutability in Cached API Responses
+**Learning:** When using @functools.lru_cache to memoize API responses (like Printify variants), returning a mutable list can lead to unintended state mutations if downstream code modifies the cached reference. Furthermore, JSON serialization (json.dumps) natively handles tuples as arrays, meaning tuples are safe, drop-in replacements for lists in payload construction.
+**Action:** Always cast the return type of memoized functions returning collections to immutable structures (e.g., tuple) to guarantee thread safety and prevent downstream mutation bugs.
