@@ -1,0 +1,3 @@
+## 2026-08-28 - Cache bulk static Printify data via lru_cache
+**Learning:** In applications mapping single blueprint configurations to multiple products, repeating API calls for variant retrieval per product creates a severe bottleneck. Python's json.dumps natively serializes tuples into JSON arrays, allowing immutable tuples to safely back an @functools.lru_cache and replace list return types in API payloads seamlessly.
+**Action:** Whenever a script orchestrates bulk item creation leveraging static configurations, memoize the config retrieval functions with an immutable return type (like tuple) early in the pipeline to prevent N+1 API bottlenecks.
