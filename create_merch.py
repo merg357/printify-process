@@ -5,6 +5,7 @@ Creates draft products for a Printify shop using hardcoded blueprints.
 """
 import requests
 import json
+import functools
 import time
 import os
 from typing import List, Dict, Any
@@ -53,15 +54,20 @@ def get_product_blueprints() -> List[Dict[str, Any]]:
         {"product_name": "Tote Bag", "blueprint_id": 1234, "variant_id": None, "color": "Navy",    "placement": {"position": "front", "size": 1.5}},
     ]
 
-def get_variants(blueprint_id: int, print_provider_id: int = 29) -> List[int]:
+# 💡 What: Memoize static Printify variant queries to prevent N+1 API calls.
+# 🎯 Why: Fetching variants for the same blueprint/provider in loops creates unnecessary network bottlenecks.
+# 📊 Impact: Eliminates redundant HTTP requests for blueprints already fetched, speeding up bulk product creation.
+# 🛡️ Safety: Uses tuple return type to ensure cached result is immutable and thread-safe.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, print_provider_id: int = 29) -> tuple[int, ...]:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{print_provider_id}/variants.json"
     resp = requests.get(url, headers=get_headers())
     resp.raise_for_status()
     data = resp.json()
     variants = data.get("variants", [])
-    return [v["id"] for v in variants[:3]] if variants else []
+    return tuple(v["id"] for v in variants[:3]) if variants else ()
 
-def create_product(blueprint_id: int, variant_ids: List[int], product_name: str,
+def create_product(blueprint_id: int, variant_ids: tuple[int, ...], product_name: str,
                    color: str, placement: Dict[str, Any]) -> Dict[str, Any]:
     logo_url = os.getenv("LOGO_URL", "https://via.placeholder.com/300x300.png?text=Reliable+Chaos")
     url = f"{BASE_URL}/shops/{SHOP_ID}/products.json"
