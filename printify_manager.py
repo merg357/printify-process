@@ -17,6 +17,7 @@ Usage:
 """
 import sys
 import os
+import functools
 import json
 import time
 import requests
@@ -70,11 +71,16 @@ def save_upload_cache(data: dict):
     with open(UPLOAD_CACHE, "w") as f:
         json.dump(data, f, indent=2)
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Memoize static Printify blueprint variants to prevent redundant API calls.
+# 🎯 Why: Fetching variants takes time and blueprint variants don't change during a run.
+# 📊 Impact: Eliminates N+1 query bottlenecks during bulk creation loops.
+# 🛡️ Safety: Maxsize is None since blueprint count is very small. Returns tuple to ensure immutable state downstream.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     r = requests.get(url, headers=AUTH_H, timeout=15)
     r.raise_for_status()
-    return [v["id"] for v in r.json().get("variants", [])[:4]]
+    return tuple(v["id"] for v in r.json().get("variants", [])[:4])
 
 def upload_image_file(path: str) -> str:
     """Upload a local PNG file to Printify. Returns image ID."""
