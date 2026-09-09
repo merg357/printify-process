@@ -3,6 +3,7 @@
 Merch Factory - Creates products from local ./designs/*.png files.
 Uploads each image to Printify then creates hoodie/tee/mug drafts.
 """
+import functools
 import requests
 import json
 import time
@@ -39,14 +40,19 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Memoize static Printify blueprint variants to prevent redundant API calls.
+# 🎯 Why: Fetching variants takes time and blueprint variants don't change during a run.
+# 📊 Impact: Eliminates N+1 query bottlenecks during bulk creation loops.
+# 🛡️ Safety: Maxsize is None since blueprint count is very small. Returns tuple to ensure immutable state downstream.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple(v["id"] for v in resp.json().get("variants", [])[:4])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
-                   variant_ids: list, image_id: str) -> dict:
+                   variant_ids: tuple, image_id: str) -> dict:
     url = f"{BASE_URL}/shops/{SHOP_ID}/products.json"
     payload = {
         "title": title,
