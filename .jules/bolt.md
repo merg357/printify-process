@@ -1,0 +1,3 @@
+## 2026-09-12 - Cache Third-Party API Queries in Batch Operations
+**Learning:** Blueprint variants from Printify remain static during batch product generation, but omitting caching leads to severe N+1 API network bottlenecks during iterative creation loops. Also, returning mutable types (like lists) from LRU caches can cause unexpected downstream side effects or thread unsafety.
+**Action:** Always wrap static or infrequently changing third-party API queries in `@functools.lru_cache(maxsize=None)` when processing in bulk loops, and ensure the returned data is cast to an immutable structure like a tuple.
