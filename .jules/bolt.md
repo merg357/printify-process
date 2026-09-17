@@ -1,0 +1,3 @@
+## 2026-09-17 - Memoize Printify Variant Lookup
+**Learning:** Found an N+1 query problem in the script creating products across multiple files. The `get_variants` function is called repeatedly for the same `blueprint_id` and `provider_id` inside product creation loops. Caching this HTTP request will speed up product creation dramatically. Since the cached value is modified or used, returning a mutable list can be dangerous, so returning a tuple is better.
+**Action:** Use `@functools.lru_cache` to memoize the API responses for blueprints since their variants don't change frequently during a single execution.
