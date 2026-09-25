@@ -7,6 +7,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -39,14 +40,19 @@ def upload_image(image_path: str) -> str:
         raise ValueError(f"No image ID returned: {resp.text}")
     return image_id
 
-def get_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Memoize Printify variants API queries
+# 🎯 Why: Variants for a specific blueprint/provider are static. Fetching them repeatedly in bulk loops causes N+1 network bottlenecks.
+# 📊 Impact: Eliminates redundant HTTP requests, significantly speeding up bulk product creation.
+# 🛡️ Safety: Returns a tuple instead of a list to ensure the cached object is immutable and thread-safe.
+@functools.lru_cache(maxsize=None)
+def get_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return [v["id"] for v in resp.json().get("variants", [])[:4]]
+    return tuple([v["id"] for v in resp.json().get("variants", [])[:4]])
 
 def create_product(title: str, blueprint_id: int, provider_id: int,
-                   variant_ids: list, image_id: str) -> dict:
+                   variant_ids: tuple, image_id: str) -> dict:
     url = f"{BASE_URL}/shops/{SHOP_ID}/products.json"
     payload = {
         "title": title,

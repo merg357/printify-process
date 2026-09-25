@@ -1,0 +1,3 @@
+## 2024-09-25 - Printify Variant API N+1 Queries
+**Learning:** During bulk product creation loops across multiple scripts (`printify_manager.py`, `create_merch.py`, `merch_factory.py`), the `get_variants` function is called repeatedly for the same `blueprint_id` and `provider_id`. This results in an N+1 network bottleneck because blueprint variants are static and don't change between loop iterations.
+**Action:** Always use Python's `@functools.lru_cache(maxsize=None)` to memoize static or infrequently changing third-party API queries like blueprint variants. Remember to cast the returned list to an immutable `tuple` to ensure cache safety and update the return type hints to `tuple`.
