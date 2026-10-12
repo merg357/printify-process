@@ -1,0 +1,3 @@
+## 2026-10-12 - Cache Immutable API Responses in Bulk Product Creation Loops
+**Learning:** When performing bulk merchandise operations that query static data (like fetching blueprint variants), failing to cache responses creates an N+1 network bottleneck. When applying `@functools.lru_cache` to these methods, returning mutable structures like lists risks downstream state mutation.
+**Action:** Always memoize static third-party API queries within iterative loops (like product creation) and ensure the returned data is an immutable type, such as a `tuple`, to guarantee thread safety and immutability.
