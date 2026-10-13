@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,11 +24,16 @@ def get_blueprints() -> list:
     resp.raise_for_status()
     return resp.json()
 
-def get_blueprint_variants(blueprint_id: int, provider_id: int) -> list:
+# 💡 What: Cache static blueprint variants from Printify
+# 🎯 Why: Solves N+1 API bottleneck in product creation loop
+# 📊 Impact: Eliminates redundant network requests
+# 🛡️ Safety: Returns immutable tuple for cache safety
+@functools.lru_cache(maxsize=None)
+def get_blueprint_variants(blueprint_id: int, provider_id: int) -> tuple:
     url = f"{BASE_URL}/catalog/blueprints/{blueprint_id}/print_providers/{provider_id}/variants.json"
     resp = requests.get(url, headers=HEADERS)
     resp.raise_for_status()
-    return resp.json().get("variants", [])
+    return tuple(resp.json().get("variants", []))
 
 def upload_image(image_path: str) -> str:
     url = f"{BASE_URL}/uploads/images.json"

@@ -1,0 +1,3 @@
+## 2026-10-13 - Printify Blueprint Variants Caching
+**Learning:** In bulk creation scripts (e.g., `create_merch.py`, `merg_bridge.py`, `create_merch_v2.py`), fetching `variants.json` from Printify for each product causes a significant N+1 API bottleneck because the variants for a specific blueprint/provider combination are static.
+**Action:** Always wrap third-party catalog/variant queries with `@functools.lru_cache(maxsize=None)` in iterative creation loops. Ensure the cached function returns an immutable `tuple` instead of a `list` to guarantee thread safety and prevent unintended downstream state mutations.

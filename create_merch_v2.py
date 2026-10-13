@@ -6,6 +6,7 @@ import requests
 import json
 import time
 import os
+import functools
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
@@ -30,16 +31,23 @@ BLUEPRINTS = [
 
 created_products = []
 
+# 💡 What: Extract inline API call to a memoized function
+# 🎯 Why: Solves N+1 API requests in the creation loop
+# 📊 Impact: Substantially faster loop execution by hitting cache
+# 🛡️ Safety: Returns immutable tuple
+@functools.lru_cache(maxsize=None)
+def get_variants_v2(bp_id: int, provider_id: int) -> tuple:
+    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
+    resp = requests.get(var_url, headers=HEADERS)
+    if resp.status_code != 200:
+        return ()
+    return tuple(resp.json().get("variants", []))
+
 for i in range(25):
     bp_id, provider_id, label = BLUEPRINTS[i % len(BLUEPRINTS)]
 
     # Fetch real variants
-    var_url = f"https://api.printify.com/v1/catalog/blueprints/{bp_id}/print_providers/{provider_id}/variants.json"
-    resp = requests.get(var_url, headers=HEADERS)
-    if resp.status_code != 200:
-        print(f"[{i+1}] Could not get variants for {label}: {resp.status_code}")
-        continue
-    variants = resp.json().get("variants", [])
+    variants = get_variants_v2(bp_id, provider_id)
     if not variants:
         print(f"[{i+1}] No variants for {label}, skipping")
         continue
