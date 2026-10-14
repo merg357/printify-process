@@ -1,0 +1,3 @@
+## 2024-10-14 - Redundant network calls in nested loops
+**Learning:** The application queries Printify for static variant combinations inside iteration loops (e.g. `get_variants` is called inside `create_product` or directly for each product creation loop), causing N+1 API problems which severely impacts product generation times. Caching these external API responses can eliminate significant network bottlenecks.
+**Action:** Use `@functools.lru_cache(maxsize=None)` for functions fetching static Printify blueprint metadata (like `get_variants`). Ensure the return type is cast to a `tuple` instead of a `list` to guarantee immutability and thread safety before it hits the cache.
