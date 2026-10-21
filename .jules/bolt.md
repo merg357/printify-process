@@ -1,0 +1,3 @@
+## 2026-10-21 - Memoizing Variant API Queries
+**Learning:** In bulk product creation loops, querying the third-party API for print provider variants (e.g., `get_variants`) for the same blueprint creates a significant N+1 network bottleneck, as the variants for a specific blueprint and print provider are static.
+**Action:** Always memoize these static third-party API queries using Python's `@functools.lru_cache(maxsize=None)` to eliminate redundant network requests. Be sure to return an immutable structure like a `tuple` instead of a list to maintain thread safety and prevent downstream mutation bugs when caching. Also, explicitly update the return type hints to match the cached tuple.
