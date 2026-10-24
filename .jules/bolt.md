@@ -1,0 +1,3 @@
+## 2026-10-24 - Memoizing Variant API Queries
+**Learning:** In the Printify product creation loop, we repeatedly call the variants API endpoint (`get_variants`) for the same blueprint and provider. This is an N+1 network bottleneck because variants are static per provider/blueprint.
+**Action:** Use Python's `@functools.lru_cache(maxsize=None)` to memoize static or infrequently changing third-party API queries. Change the return type of memoized functions from mutable objects (like lists) to immutable structures (like tuples) to guarantee thread safety and prevent unintended downstream state mutations from shared references.
